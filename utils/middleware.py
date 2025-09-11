@@ -31,23 +31,22 @@ class ClientIPLoggingMiddleware(BaseHTTPMiddleware):
 # Existing settings loader retained (unused now for appname) but left for future extension
 
 def settings_loader():
-    app_data_folder = os.getenv("APP_DATA", "~/")
-    settings_file = os.path.join(app_data_folder, "settings.json")
-    if os.path.exists(settings_file):
-        with open(settings_file, "r") as f:
-            settings = json.load(f)
-            os.environ["base_folder"] = settings.get("base_folder", "./")
-            os.environ["company"] = settings.get("company", "Default Company")
-            os.environ["upload_folder"] = settings.get("upload_folder", "./")
-            os.environ["appname"] = settings.get("appname", "A2EDocs")
-            os.environ["search_pattern"] = settings.get("search_pattern", "Account Number\\n(\\d+)\\b")
-            os.environ["test_flag"] = settings.get("test_flag", "off")
-            os.environ["test_email"] = settings.get("test_email", "")
-    else:
-        os.environ["BASE_FOLDER"] = "./"
-        os.environ["company"] = "Default Company"
-        os.environ["upload_folder"] = "./"
-        os.environ["appname"] = "A2EDocs"
-        os.environ["search_pattern"] = "Account Number\\n(\\d+)\\b"
-        os.environ["test_flag"] = "off"
-        os.environ["test_email"] = ""
+    pass
+    # app_data_folder = os.getenv("APP_DATA", "~/")
+    # settings_file = os.path.join(app_data_folder, "settings.json")
+    # if os.path.exists(settings_file):
+    #     with open(settings_file, "r") as f:
+    #         settings = json.load(f)
+    #         os.environ["base_folder"] = settings.get("base_folder", "./")
+    #         os.environ["company"] = settings.get("company", "Default Company")
+    #         os.environ["upload_folder"] = settings.get("upload_folder", "./")
+    #         os.environ["search_pattern"] = settings.get("search_pattern", "Account Number\\n(\\d+)\\b")
+    #         os.environ["test_flag"] = settings.get("test_flag", "off")
+    #         os.environ["test_email"] = settings.get("test_email", "")
+    # else:
+    #     os.environ["BASE_FOLDER"] = "./"
+    #     os.environ["company"] = "Default Company"
+    #     os.environ["upload_folder"] = "./"
+    #     os.environ["search_pattern"] = "Account Number\\n(\\d+)\\b"
+    #     os.environ["test_flag"] = "off"
+    #     os.environ["test_email"] = ""
