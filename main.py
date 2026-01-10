@@ -16,7 +16,7 @@ import base64
 from typing import Optional
 import json
 import logging
-import ftplib
+import paramiko
 from utils.middleware import ContextProcessorMiddleware
 
 load_dotenv()
@@ -72,6 +72,7 @@ def verify_session_token(token: str) -> Optional[str]:
 
 def is_authenticated(request: Request) -> bool:
     """Return True if the current session cookie corresponds to an admin user."""
+#    return True
     token = request.cookies.get("session")
     if not token:
         return False
@@ -102,7 +103,7 @@ def list_exported_files():
     files.sort(key=lambda x: x["date"], reverse=True)
     return files
 
-# Utility: FTP push
+# Utility: SFTP push
 
 def push_file_to_ftp(filename):
     ftp_host = os.getenv("FTP_HOST")
@@ -114,22 +115,39 @@ def push_file_to_ftp(filename):
     fpath = os.path.join(data_folder, filename)
     if not os.path.exists(fpath):
         return False, "File not found"
+    rpath = "/westlands-water-district-ca/"
     try:
-        with ftplib.FTP_TLS(ftp_host) as ftp:
-            ftp.login(ftp_user, ftp_pass)
-            # ftp.prot_p()  # Secure data connection
-            ftp.set_pasv(True)
-            with open(fpath, "rb") as file:
-                ftp.storbinary(f"STOR {filename}", file)
-
-            # now load the directory, and make sure the file is there.
-            files = ftp.nlst()
-            if filename not in files:
-                return False, "File upload failed: file not found on server after upload"
-
+        # Create an SSH client
+        ssh_client = paramiko.SSHClient()
+        # Automatically add the host key (use with caution)
+        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        # Connect to the SFTP server
+        ssh_client.connect(ftp_host, 22, ftp_user, ftp_pass)
+        # Create an SFTP session
+        sftp_client = ssh_client.open_sftp()
+        # ... perform SFTP operations here ...
+        sftp_client.put(fpath, rpath+filename)
+        files = sftp_client.listdir(rpath)
+        if filename not in files:
+            return False, "File upload failed: file not found on server after upload"
         return True, "File pushed to FTP successfully"
+
+    except paramiko.AuthenticationException:
+        print("Authentication failed, please check your credentials.")
+        return False, "Authentication failed, please check your credentials."
+    except paramiko.SSHException as e:
+        print(f"SSH error: {e}")
+        return False, "Authentication failed, please check your credentials."
     except Exception as e:
+        print(f"An error occurred: {e}")
         return False, str(e)
+
+    finally:
+        # Ensure connections are closed
+        if sftp_client:
+            sftp_client.close()
+        if ssh_client:
+            ssh_client.close()
 
 # Scheduled tasks
 scheduled_export_time = None
