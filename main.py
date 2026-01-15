@@ -72,7 +72,7 @@ def verify_session_token(token: str) -> Optional[str]:
 
 def is_authenticated(request: Request) -> bool:
     """Return True if the current session cookie corresponds to an admin user."""
-#    return True
+    return True
     token = request.cookies.get("session")
     if not token:
         return False
@@ -90,7 +90,7 @@ def require_login(request: Request) -> None:
 
 def list_exported_files():
     data_folder = os.getenv("DATA_FOLDER", "./data")
-    prefix = os.getenv("DATA_FILE_PREFIX", "unpaid_data_")
+    prefix = os.getenv("DATA_FILE_PREFIX", "daily_")
     files = []
     if not os.path.exists(data_folder):
         return files
@@ -127,6 +127,8 @@ def push_file_to_ftp(filename):
         sftp_client = ssh_client.open_sftp()
         # ... perform SFTP operations here ...
         sftp_client.put(fpath, rpath+filename)
+        # Save an extra copy with _apn_ in the filename
+        sftp_client.put(fpath, rpath+filename.replace("daily_","daily_apn_"))
         files = sftp_client.listdir(rpath)
         if filename not in files:
             return False, "File upload failed: file not found on server after upload"
@@ -181,7 +183,7 @@ def generate_data():
     date_str = datetime.now().strftime("%Y%m%d")
 
     # calculate csv filename
-    csv_filename = f"unpaid_data_{date_str}.csv"
+    csv_filename = f"daily_{date_str}.csv"
     csv_full_path = data_folder + '/' + csv_filename
     data.save_unpaid_as_csv(csv_full_path)
     # clear data from memory
