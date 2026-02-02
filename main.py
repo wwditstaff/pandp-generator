@@ -177,7 +177,6 @@ async def api_generate_data():
 def generate_data():
     data = Data()
     data.load_unpaid()
-    data.load_unpaid_apns()
     data_folder = os.getenv("DATA_FOLDER", "./data")
     if not os.path.exists(data_folder):
         os.makedirs(data_folder)
@@ -187,12 +186,6 @@ def generate_data():
     csv_filename = f"daily_{date_str}.csv"
     csv_full_path = data_folder + '/' + csv_filename
     data.save_unpaid_as_csv(csv_full_path)
-
-    # calculate apn csv filename
-    csv_apn_filename = f"daily_apn_{date_str}.csv"
-    csv_apn_full_path = data_folder + '/' + csv_apn_filename
-    data.save_unpaid_apns_as_csv(csv_apn_full_path)
-
     # clear data from memory
     data = None
     return
