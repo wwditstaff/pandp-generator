@@ -9,6 +9,7 @@ load_dotenv()
 class Data:
     def __init__(self):
         self.unpaid = []
+        self.unpaid_apns = []
 
 
     def load_unpaid(self):
@@ -36,6 +37,7 @@ class Data:
                         "invoice": row[8],
                         "charge_type": row[9],
                         "apn": row[10],
+                        "accesscode_total": float(row[11]),
                     }
                     self.unpaid.append(item)
             wmisdb = None
@@ -44,6 +46,51 @@ class Data:
         except Exception as err:
             print(f'Unexpected Error:{err}')
 
+        return
+
+    def load_unpaid_apns(self):
+        try:
+            wmisdb = WMISDB()
+            conn = wmisdb.connection
+            cursor = conn.cursor()
+            sql = "exec sp_p_and_p_upload_generator_apn;"
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            if len(rows) > 0:
+                for row in rows:
+                    item = {
+                        "account_number": row[0],
+                        "access_code": row[1],
+                        "customer_name": row[2],
+                        "amount_due": float(row[3]),
+                        "amount_billed": float(row[4]),
+                        "bill_date": row[5],
+                        "due_date": row[6],
+                        "invoice_text": row[7],
+                        "invoice": row[8],
+                        "charge_type": row[9],
+                        "apn": row[10],
+                        "apn_total": float(row[11]),
+                    }
+                    self.unpaid_apns.append(item)
+            wmisdb = None
+        except DBError as err:
+            print(f'DB Error:{err}')
+        except Exception as err:
+            print(f'Unexpected Error:{err}')
+
+        return
+
+    def save_unpaid_apns_as_csv(self, filename: str):
+        """ save the unpaid apns data to a csv file """
+        import pandas as pd
+
+        df = pd.DataFrame(self.unpaid_apns)
+        df.index += 1
+        # if file exists, remove it, then save
+        if os.path.exists(filename):
+            os.remove(filename)
+        df.to_csv(filename, index=False)
         return
 
     def save_unpaid_as_excel(self, filename: str):
