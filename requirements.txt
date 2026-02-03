@@ -8,4 +8,5 @@ openpyxl
 apscheduler
 requests
 python-multipart
+paramiko
 
