@@ -160,13 +160,11 @@ def scheduled_export():
 
 def scheduled_ftp_push():
     files = list_exported_files()
-    file_names = {f["name"] for f in files}
     daily_files = [f for f in files if not f["name"].startswith("daily_apn_")]
     if daily_files:
-        date_str = daily_files[0]["name"].replace("daily_", "").replace(".csv", "").replace(".xlsx", "")
-        for candidate in [f"daily_{date_str}.csv", f"daily_apn_{date_str}.csv"]:
-            if candidate in file_names:
-                push_file_to_ftp(candidate)
+        latest = daily_files[0]["name"]
+        push_file_to_ftp(latest)
+        push_file_to_ftp(latest.replace("daily_", "daily_apn_"))
 
 @app.get("/", response_class=HTMLResponse)
 def root(request: Request):
