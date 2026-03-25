@@ -21,6 +21,14 @@ from utils.middleware import ContextProcessorMiddleware
 
 load_dotenv()
 
+log_file = os.getenv("LOG_FILE", "ftp_upload.log")
+logging.basicConfig(
+    filename=log_file,
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
 app = FastAPI()
 app.add_middleware(ContextProcessorMiddleware)
 templates = Jinja2Templates(directory="templates")
@@ -163,8 +171,12 @@ def scheduled_ftp_push():
     daily_files = [f for f in files if not f["name"].startswith("daily_apn_")]
     if daily_files:
         latest = daily_files[0]["name"]
-        push_file_to_ftp(latest)
-        push_file_to_ftp(latest.replace("daily_", "daily_apn_"))
+        for filename in [latest, latest.replace("daily_", "daily_apn_")]:
+            success, msg = push_file_to_ftp(filename)
+            if success:
+                logging.info(f"FTP upload succeeded: {filename}")
+            else:
+                logging.error(f"FTP upload failed: {filename} — {msg}")
 
 @app.get("/", response_class=HTMLResponse)
 def root(request: Request):
