@@ -124,6 +124,8 @@ def push_file_to_ftp(filename):
     if not os.path.exists(fpath):
         return False, "File not found"
     rpath = "/westlands-water-district-ca/"
+    ssh_client = None
+    sftp_client = None
     try:
         # Create an SSH client
         ssh_client = paramiko.SSHClient()
@@ -153,11 +155,12 @@ def push_file_to_ftp(filename):
         return False, str(e)
 
     finally:
-        # Ensure connections are closed
         if sftp_client:
             sftp_client.close()
+            logging.info(f"SFTP session closed: {filename}")
         if ssh_client:
             ssh_client.close()
+            logging.info(f"SSH connection closed: {filename}")
 
 # Scheduled tasks
 scheduled_export_time = None
